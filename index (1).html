@@ -1,0 +1,622 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Factoring Expression Worksheet Generator</title>
+
+<!-- KaTeX: clean LaTeX rendering very close to Desmos -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+
+<style>
+  :root {
+    --ink:#171717;
+    --line:#d5d5d5;
+    --muted:#666;
+    --paper:#fff;
+  }
+
+  * { box-sizing:border-box; }
+
+  body {
+    margin:0;
+    font-family:Arial, Helvetica, sans-serif;
+    background:#ececec;
+    color:var(--ink);
+  }
+
+  .app {
+    min-height:100vh;
+    display:grid;
+    grid-template-columns:minmax(300px, 365px) 1fr;
+  }
+
+  .controls {
+    background:#fff;
+    border-right:1px solid var(--line);
+    padding:20px;
+    overflow:auto;
+  }
+
+  h1 {
+    margin:0 0 18px;
+    font-size:20px;
+  }
+
+  fieldset {
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:12px;
+    margin:0 0 14px;
+  }
+
+  legend {
+    font-weight:700;
+    padding:0 6px;
+  }
+
+  label {
+    display:block;
+    margin:8px 0 4px;
+    font-size:14px;
+  }
+
+  select, input[type="number"] {
+    width:100%;
+    height:36px;
+    padding:0 9px;
+    border:1px solid #bbb;
+    border-radius:6px;
+    background:#fff;
+    font:inherit;
+  }
+
+  .row {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:9px;
+  }
+
+  .check-grid {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:8px 10px;
+    margin-top:8px;
+  }
+
+  .check-grid label {
+    display:flex;
+    align-items:center;
+    gap:7px;
+    margin:0;
+  }
+
+  .hint {
+    margin-top:7px;
+    color:var(--muted);
+    font-size:12px;
+    line-height:1.35;
+  }
+
+  .buttons {
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:9px;
+    margin-top:16px;
+  }
+
+  button {
+    border:1px solid #222;
+    border-radius:7px;
+    padding:10px 12px;
+    background:#fff;
+    font:inherit;
+    font-weight:700;
+    cursor:pointer;
+  }
+
+  button.primary {
+    background:#111;
+    color:#fff;
+  }
+
+  .error {
+    display:none;
+    margin-top:12px;
+    color:#9b1c1c;
+    background:#fff1f1;
+    border:1px solid #e1b4b4;
+    border-radius:6px;
+    padding:9px;
+    font-size:13px;
+  }
+
+  .preview-shell {
+    padding:22px;
+    overflow:auto;
+  }
+
+  .preview-label {
+    max-width:8.5in;
+    margin:0 auto 8px;
+    color:#555;
+    font-size:13px;
+  }
+
+  #pages {
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:22px;
+  }
+
+  .sheet {
+    width:8.5in;
+    height:11in;
+    background:#fff;
+    box-shadow:0 2px 12px rgba(0,0,0,.16);
+    padding:.5in;
+    overflow:hidden;
+  }
+
+  .sheet-header {
+    height:.45in;
+    margin-bottom:.14in;
+    display:grid;
+    grid-template-columns:1fr 1.15fr 1fr;
+    align-items:end;
+    column-gap:12px;
+    white-space:nowrap;
+    font-size:14px;
+  }
+
+  .sheet-title {
+    text-align:center;
+    font-size:16px;
+    font-weight:700;
+  }
+
+  .sheet-date { text-align:right; }
+
+  .problem-grid {
+    display:grid;
+    height:calc(100% - .59in);
+    align-items:center;
+  }
+
+  .problem {
+    position:relative;
+    display:flex;
+    align-items:center;
+    min-height:0;
+    padding-left:34px;
+  }
+
+  .problem-number {
+    position:absolute;
+    left:2px;
+    top:50%;
+    transform:translateY(-50%);
+    font-size:12px;
+  }
+
+  .math {
+    width:100%;
+    text-align:center;
+    font-size:1.18rem;
+    overflow:visible;
+  }
+
+  .solution-note {
+    position:absolute;
+    right:4px;
+    bottom:2px;
+    font-size:10px;
+    color:#555;
+  }
+
+  @media (max-width:900px) {
+    .app { grid-template-columns:1fr; }
+    .controls {
+      border-right:0;
+      border-bottom:1px solid var(--line);
+    }
+    .preview-shell { padding:12px; }
+  }
+
+  @media print {
+    @page { size:letter; margin:0; }
+    body { background:#fff; }
+    .controls, .preview-label { display:none !important; }
+    .app { display:block; }
+    .preview-shell { padding:0; }
+    #pages { gap:0; }
+    .sheet {
+      width:8.5in;
+      height:11in;
+      box-shadow:none;
+      margin:0;
+      break-after:page;
+      page-break-after:always;
+    }
+    .sheet:last-child {
+      break-after:auto;
+      page-break-after:auto;
+    }
+  }
+</style>
+</head>
+
+<body>
+<div class="app">
+  <aside class="controls">
+    <h1>Factoring Expression Worksheet Generator</h1>
+
+    <fieldset>
+      <legend>Givens</legend>
+
+      <label for="givenMode">Layout</label>
+      <select id="givenMode">
+        <option value="random" selected>Randomized</option>
+        <option value="fixed">Fixed positions</option>
+      </select>
+
+      <div id="randomControls">
+        <label for="randomCount">Number of givens per problem</label>
+        <select id="randomCount">
+          <option value="2" selected>2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+        </select>
+        <div class="hint">
+          Randomized problems choose from a, b, ab, and a+b.
+          Two givens is the minimum so each problem is solvable.
+        </div>
+      </div>
+
+      <div id="fixedControls" style="display:none">
+        <label>Show these positions</label>
+        <div class="check-grid">
+          <label><input type="checkbox" class="fixedGiven" value="a" checked> a</label>
+          <label><input type="checkbox" class="fixedGiven" value="b" checked> b</label>
+          <label><input type="checkbox" class="fixedGiven" value="product"> ab</label>
+          <label><input type="checkbox" class="fixedGiven" value="sum"> a+b</label>
+        </div>
+        <div class="hint">Choose at least 2 positions.</div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Values</legend>
+      <div class="row">
+        <div>
+          <label for="aMin">a minimum</label>
+          <input id="aMin" type="number" value="1" step="1">
+        </div>
+        <div>
+          <label for="aMax">a maximum</label>
+          <input id="aMax" type="number" value="12" step="1">
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <label for="bMin">b minimum</label>
+          <input id="bMin" type="number" value="1" step="1">
+        </div>
+        <div>
+          <label for="bMax">b maximum</label>
+          <input id="bMax" type="number" value="12" step="1">
+        </div>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Worksheet</legend>
+
+      <label for="problemCount">Problems per side</label>
+      <input id="problemCount" type="number" min="1" max="24" value="12" step="1">
+
+      <label for="sides">Pages</label>
+      <select id="sides">
+        <option value="1" selected>Single sided</option>
+        <option value="2">Front and back</option>
+      </select>
+
+      <label for="solutions">Solutions</label>
+      <select id="solutions">
+        <option value="no" selected>No solutions</option>
+        <option value="yes">Include solution page(s)</option>
+      </select>
+    </fieldset>
+
+    <div class="buttons">
+      <button id="regenerateBtn">Regenerate</button>
+      <button id="pdfBtn" class="primary">Export PDF</button>
+    </div>
+
+    <div id="errorBox" class="error"></div>
+  </aside>
+
+  <main class="preview-shell">
+    <div class="preview-label">Preview</div>
+    <div id="pages"></div>
+  </main>
+</div>
+
+<script>
+(() => {
+  "use strict";
+
+  const $ = id => document.getElementById(id);
+  const POSITIONS = ["a", "b", "product", "sum"];
+
+  let worksheetPages = [];
+  let currentSettings = null;
+
+  function randint(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function shuffled(items) {
+    const arr = items.slice();
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  function showError(msg) {
+    $("errorBox").textContent = msg;
+    $("errorBox").style.display = "block";
+  }
+
+  function clearError() {
+    $("errorBox").style.display = "none";
+  }
+
+  function getSettings() {
+    const fixed = [...document.querySelectorAll(".fixedGiven:checked")].map(x => x.value);
+
+    const s = {
+      mode: $("givenMode").value,
+      fixed,
+      randomCount: Number($("randomCount").value),
+      aMin: Number($("aMin").value),
+      aMax: Number($("aMax").value),
+      bMin: Number($("bMin").value),
+      bMax: Number($("bMax").value),
+      perSide: Number($("problemCount").value),
+      pageCount: Number($("sides").value),
+      solutions: $("solutions").value === "yes"
+    };
+
+    if (![s.aMin, s.aMax, s.bMin, s.bMax, s.perSide].every(Number.isInteger)) {
+      throw new Error("Ranges and problem count must be whole numbers.");
+    }
+
+    if (s.aMin > s.aMax) throw new Error("a minimum cannot exceed a maximum.");
+    if (s.bMin > s.bMax) throw new Error("b minimum cannot exceed b maximum.");
+    if (s.perSide < 1 || s.perSide > 24) throw new Error("Use between 1 and 24 problems per side.");
+    if (s.mode === "fixed" && fixed.length < 2) throw new Error("Choose at least 2 fixed givens.");
+
+    return s;
+  }
+
+  function givenPositions(settings) {
+    if (settings.mode === "fixed") return settings.fixed.slice();
+    return shuffled(POSITIONS).slice(0, settings.randomCount);
+  }
+
+  // If only product and one zero factor are shown, the other factor is not determined.
+  function ambiguousZeroCase(a, b, givens) {
+    const g = new Set(givens);
+    if (a === 0 && g.has("a") && g.has("product") && !g.has("b") && !g.has("sum")) return true;
+    if (b === 0 && g.has("b") && g.has("product") && !g.has("a") && !g.has("sum")) return true;
+    return false;
+  }
+
+  function makeProblem(settings, number) {
+    for (let tries = 0; tries < 500; tries++) {
+      const a = randint(settings.aMin, settings.aMax);
+      const b = randint(settings.bMin, settings.bMax);
+      const givens = givenPositions(settings);
+      if (!ambiguousZeroCase(a, b, givens)) {
+        return {
+          number,
+          a,
+          b,
+          product: a * b,
+          sum: a + b,
+          givens
+        };
+      }
+    }
+    throw new Error("Those settings are producing ambiguous zero-factor problems. Adjust the ranges or givens.");
+  }
+
+  function generateData() {
+    clearError();
+    currentSettings = getSettings();
+    worksheetPages = [];
+
+    let n = 1;
+    for (let p = 0; p < currentSettings.pageCount; p++) {
+      const page = [];
+      for (let i = 0; i < currentSettings.perSide; i++) {
+        page.push(makeProblem(currentSettings, n++));
+      }
+      worksheetPages.push(page);
+    }
+
+    render();
+  }
+
+  function blank(width="1.6em") {
+    return `\\boxed{\\phantom{${width === "2.2em" ? "000" : "00"}}}`;
+  }
+
+  function signedFactor(v, shown) {
+    if (!shown) return blank();
+    if (v >= 0) return String(v);
+    // For x + (-3), write x - 3.
+    return String(v);
+  }
+
+  function factorTerm(v, shown) {
+    if (!shown) return `x+${blank()}`;
+    if (v >= 0) return `x+${v}`;
+    return `x-${Math.abs(v)}`;
+  }
+
+  function middleTerm(sum, shown) {
+    if (!shown) return `${blank("2.2em")}x`;
+    if (sum === 0) return `0x`;
+    if (sum === 1) return `x`;
+    if (sum === -1) return `-x`;
+    return `${sum}x`;
+  }
+
+  function constantTerm(product, shown) {
+    if (!shown) return blank("2.2em");
+    return String(product);
+  }
+
+  function expressionLatex(problem, solved=false) {
+    const visible = new Set(solved ? POSITIONS : problem.givens);
+
+    const leftA = factorTerm(problem.a, visible.has("a"));
+    const leftB = factorTerm(problem.b, visible.has("b"));
+    const mid = middleTerm(problem.sum, visible.has("sum"));
+    const constant = constantTerm(problem.product, visible.has("product"));
+
+    // Build RHS with mathematically correct signs.
+    let rhs = `x^2`;
+
+    if (visible.has("sum")) {
+      const s = problem.sum;
+      if (s > 0) rhs += s === 1 ? `+x` : `+${s}x`;
+      else if (s < 0) rhs += s === -1 ? `-x` : `-${Math.abs(s)}x`;
+      else rhs += `+0x`;
+    } else {
+      rhs += `+${blank("2.2em")}x`;
+    }
+
+    if (visible.has("product")) {
+      const p = problem.product;
+      if (p > 0) rhs += `+${p}`;
+      else if (p < 0) rhs += `-${Math.abs(p)}`;
+      else rhs += `+0`;
+    } else {
+      rhs += `+${blank("2.2em")}`;
+    }
+
+    return `\\left(${leftA}\\right)\\left(${leftB}\\right)=${rhs}`;
+  }
+
+  function rowsFor(n) {
+    return n;
+  }
+
+  function createSheet(pageProblems, solved=false) {
+    const sheet = document.createElement("section");
+    sheet.className = "sheet";
+
+    const header = document.createElement("div");
+    header.className = "sheet-header";
+    header.innerHTML = `
+      <div>Name: ____________________</div>
+      <div class="sheet-title">${solved ? "Factoring Practice — Solutions" : "Factoring Practice"}</div>
+      <div class="sheet-date">Date: ______________</div>
+    `;
+    sheet.appendChild(header);
+
+    const grid = document.createElement("div");
+    grid.className = "problem-grid";
+    grid.style.gridTemplateRows = `repeat(${rowsFor(pageProblems.length)}, 1fr)`;
+
+    pageProblems.forEach(problem => {
+      const row = document.createElement("div");
+      row.className = "problem";
+      row.innerHTML = `
+        <div class="problem-number">${problem.number}.</div>
+        <div class="math"></div>
+      `;
+      grid.appendChild(row);
+      renderMath(row.querySelector(".math"), expressionLatex(problem, solved));
+    });
+
+    sheet.appendChild(grid);
+    return sheet;
+  }
+
+  function renderMath(el, latex) {
+    if (window.katex) {
+      katex.render(latex, el, {
+        throwOnError:false,
+        displayMode:true,
+        strict:false
+      });
+    } else {
+      // Fallback if the CDN has not loaded yet.
+      el.textContent = latex;
+    }
+  }
+
+  function render() {
+    const pages = $("pages");
+    pages.innerHTML = "";
+
+    worksheetPages.forEach(page => pages.appendChild(createSheet(page, false)));
+
+    if (currentSettings.solutions) {
+      worksheetPages.forEach(page => pages.appendChild(createSheet(page, true)));
+    }
+  }
+
+  // Export through the browser's print-to-PDF engine.
+  // This preserves the exact KaTeX typography in the worksheet.
+  function exportPdf() {
+    window.print();
+  }
+
+  $("givenMode").addEventListener("change", () => {
+    const fixed = $("givenMode").value === "fixed";
+    $("randomControls").style.display = fixed ? "none" : "block";
+    $("fixedControls").style.display = fixed ? "block" : "none";
+  });
+
+  $("regenerateBtn").addEventListener("click", () => {
+    try { generateData(); }
+    catch (e) { showError(e.message || String(e)); }
+  });
+
+  $("pdfBtn").addEventListener("click", exportPdf);
+
+  [
+    "givenMode","randomCount","aMin","aMax","bMin","bMax",
+    "problemCount","sides","solutions"
+  ].forEach(id => {
+    $(id).addEventListener("change", () => {
+      try { generateData(); }
+      catch (e) { showError(e.message || String(e)); }
+    });
+  });
+
+  document.querySelectorAll(".fixedGiven").forEach(el => {
+    el.addEventListener("change", () => {
+      try { generateData(); }
+      catch (e) { showError(e.message || String(e)); }
+    });
+  });
+
+  // Wait for KaTeX to be available before first render.
+  window.addEventListener("load", () => {
+    try { generateData(); }
+    catch (e) { showError(e.message || String(e)); }
+  });
+})();
+</script>
+</body>
+</html>
